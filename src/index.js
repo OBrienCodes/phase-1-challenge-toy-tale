@@ -1,5 +1,7 @@
 let addToy = false;
-let toyCollection= document.querySelector("#toy-collection")
+let toyCollection = document.querySelector("#toy-collection");
+let addToyForm = document.querySelector(".add-toy-form");
+
 
 document.addEventListener("DOMContentLoaded", () => {
   const addBtn = document.querySelector("#new-toy-btn");
@@ -15,6 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
+
 fetch(`http://localhost:3000/toys`)
 .then(res => res.json())
 .then(toyArr => {
@@ -22,6 +25,29 @@ fetch(`http://localhost:3000/toys`)
    turnToyToHTML(toyObj)
   })
 })
+
+
+addToyForm.addEventListener("submit", (evt) => {
+    evt.preventDefault();
+    fetch(`http://localhost:3000/toys`, {
+    method: "POST",
+    headers: {
+    "Content-Type": "application/json",
+    Accept: "application/json"
+    },
+    body: JSON.stringify({
+      "name": evt.target.name.value,
+      "image": evt.target.image.value,
+      "likes": 0
+    })
+  })
+  .then(res => res.json())
+  .then((newlyCreatedToy) => {
+      turnToyToHTML(newlyCreatedToy)
+  })
+})
+
+
 
 function turnToyToHTML(toyPOJO){
   let toyCard = document.createElement("div")
@@ -35,7 +61,7 @@ function turnToyToHTML(toyPOJO){
   toyPic.src = toyPOJO.image
 
   let likes = document.createElement("p")
-  likes.innerText = toyPOJO.likes
+  likes.innerText = `${toyPOJO.likes} Likes`
 
   let likeButton = document.createElement("button")
   likeButton.className = "like-btn"
@@ -46,7 +72,22 @@ function turnToyToHTML(toyPOJO){
 
   toyCollection.append(toyCard)
 
+  likeButton.addEventListener("click",(e)=> {
+    fetch(`http://localhost:3000/toys/${toyPOJO.id}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json"
+    },
+    body: JSON.stringify({
+      likes: toyPOJO.likes + 1
 
-  
-
+    })
+  })
+  .then(res => res.json())
+  .then((updatedLike) => {
+    likes.innerText = `${updatedLike.likes} Likes`
+    toyPOJO.likes = updatedLike.likes
+ })
+})
 }
